@@ -1,0 +1,359 @@
+Experiment 9: Automate Web Application Testing Using Selenium WebDriver
+Experiment 9
+Aim: Develop Selenium WebDriver scripts to automate login functionality, interact with web elements, validate login responses and capture screenshots.
+
+Software required:
+- JDK 17
+- Maven
+- VS Code
+- Google Chrome
+- Internet connection
+We will create a simple login webpage and automate both successful and unsuccessful login attempts using Selenium.
+Step 1: Create project folder
+1. Create a folder on your Desktop.
+2. Name it:
+SeleniumLoginDemo
+
+
+3. Open the folder in VS Code.
+Step 2: Create project structure
+Create the following files and folders:
+SeleniumLoginDemo
+│
+├── pom.xml
+├── login.html
+│
+└── src
+    └── test
+        └── java
+            └── LoginTest.java
+
+
+Step 3: Create login.html
+Create a file named login.html in the main project folder.
+
+Paste this code:
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Page</title>
+</head>
+
+<body>
+
+    <h2>Login Form</h2>
+
+    <form onsubmit="return login()">
+
+        Username:
+        <input type="text" id="username"><br><br>
+
+        Password:
+        <input type="password" id="password"><br><br>
+
+        <button type="submit">Login</button>
+
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+
+        function login() {
+
+            var user = document.getElementById("username").value;
+            var pass = document.getElementById("password").value;
+
+            if(user == "admin" && pass == "12345") {
+
+                document.getElementById("message").innerText =
+                "Login Successful";
+
+            } else {
+
+                document.getElementById("message").innerText =
+                "Invalid Username or Password";
+
+            }
+
+            return false;
+        }
+
+    </script>
+
+</body>
+</html>
+
+
+Save the file.
+Step 4: Create Maven configuration file
+Create pom.xml in the main project folder.
+
+Paste:
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>SeleniumLoginDemo</artifactId>
+    <version>1.0</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.25.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
+
+
+Save the file.
+
+Purpose: This file downloads Selenium WebDriver and JUnit dependencies.
+Step 5: Test login webpage
+1. Open your SeleniumLoginDemo folder.
+2. Double-click login.html.
+3. It will open in Chrome.
+Enter these credentials:
+Login credentials
+Username
+
+admin
+
+Password
+
+12345
+
+
+Expected: Login Successful
+
+Try entering incorrect credentials as well.
+
+Expected message:
+Invalid Username or Password
+
+
+Step 6: Create Selenium Java code
+Go to:
+src/test/java
+
+
+Create a file named:
+LoginTest.java
+
+
+Paste this complete code:
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
+public class LoginTest {
+
+    @Test
+    public void testLogin() throws Exception {
+
+        WebDriver driver = new ChromeDriver();
+
+        try {
+
+            File page = new File("login.html");
+
+            driver.get(page.toURI().toString());
+
+            driver.findElement(By.id("username"))
+                  .sendKeys("admin");
+
+            driver.findElement(By.id("password"))
+                  .sendKeys("12345");
+
+            driver.findElement(
+                By.xpath("//button[@type='submit']")
+            ).click();
+
+            WebElement message =
+                driver.findElement(By.id("message"));
+
+            assertEquals("Login Successful",
+                         message.getText());
+
+            File screenshot =
+                ((TakesScreenshot) driver)
+                .getScreenshotAs(OutputType.FILE);
+
+            Files.copy(
+                screenshot.toPath(),
+                new File("login-success.png").toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            );
+
+            System.out.println("Login Successful");
+            System.out.println("Screenshot Captured");
+
+        } finally {
+
+            driver.quit();
+
+        }
+    }
+
+    @Test
+    public void testInvalidLogin() {
+
+        WebDriver driver = new ChromeDriver();
+
+        try {
+
+            File page = new File("login.html");
+
+            driver.get(page.toURI().toString());
+
+            driver.findElement(By.id("username"))
+                  .sendKeys("wrong");
+
+            driver.findElement(By.id("password"))
+                  .sendKeys("wrong");
+
+            driver.findElement(
+                By.xpath("//button[@type='submit']")
+            ).click();
+
+            String message =
+                driver.findElement(By.id("message"))
+                      .getText();
+
+            assertEquals(
+                "Invalid Username or Password",
+                message
+            );
+
+            System.out.println("Invalid Login Tested");
+
+        } finally {
+
+            driver.quit();
+
+        }
+    }
+}
+
+
+Save the file.
+Step 7: Check Java and Maven
+Open VS Code terminal.
+
+Execute:
+java -version
+
+
+Then:
+mvn -version
+
+
+Both should display their versions.
+Step 8: Execute Selenium program
+Make sure your terminal is inside SeleniumLoginDemo.
+
+Execute:
+mvn test
+
+
+Maven will download the Selenium and JUnit dependencies.
+
+Selenium Manager automatically manages ChromeDriver in supported configurations, so you generally don't need to download ChromeDriver separately.
+Step 9: Observe browser automation
+When the program runs:
+1. Chrome will open automatically.
+2. Selenium will open your login webpage.
+3. It will enter username admin.
+4. It will enter password 12345.
+5. It will click Login.
+6. It will verify the successful login message.
+7. It will capture a screenshot.
+8. It will repeat the process with incorrect credentials.
+
+
+
+Step 10: Check screenshot
+After successful login, the screenshot is saved as:
+login-success.png
+
+
+It will be generated in the Maven project root when running mvn test from that directory.
+
+Your project will look like:
+SeleniumLoginDemo
+│
+├── pom.xml
+├── login.html
+├── login-success.png
+│
+├── src
+│   └── test
+│       └── java
+│           └── LoginTest.java
+│
+└── target
+    └── surefire-reports
+
+
+Step 11: Check test execution results
+Execute:
+mvn test
+
+
+Expected output:
+Tests run: 2
+Failures: 0
+Errors: 0
+Skipped: 0
+
+BUILD SUCCESS
+
+
+Open:
+target/surefire-reports
+
+
+You can view the generated test reports.
